@@ -14,23 +14,20 @@ class TokenType(Enum):
     PROGRAM = auto()
     BEGIN = auto()
     END = auto()
-    VAR = auto()         # 变量声明
     IF = auto()
     THEN = auto()
     ELSE = auto()
     WHILE = auto()
     DO = auto()
-    AND = auto()
-    OR = auto()
-    NOT = auto()
+    VAR = auto()         # 变量声明
     TRUE = auto()        # 布尔值
     FALSE = auto()
-    
-    # 类型关键字
     INTEGER_TYPE = auto()
     REAL_TYPE = auto()
     BOOLEAN_TYPE = auto()
     STRING_TYPE = auto()
+    WRITE = auto()       # 输出语句
+    READ = auto()        # 输入语句
     
     # 标识符和字面量
     IDENTIFIER = auto()
@@ -53,6 +50,11 @@ class TokenType(Enum):
     GE = auto()          # >=
     EQ = auto()          # =
     NE = auto()          # <>
+    
+    # 逻辑运算符
+    AND = auto()         # and
+    OR = auto()          # or
+    NOT = auto()         # not
     
     # 分隔符
     LPAREN = auto()      # (
@@ -105,10 +107,23 @@ class Lexer:
         'real': TokenType.REAL_TYPE,
         'boolean': TokenType.BOOLEAN_TYPE,
         'string': TokenType.STRING_TYPE,
+        # I/O 关键字
+        'write': TokenType.WRITE,
+        'read': TokenType.READ,
     }
     
+    # 限制常量
+    MAX_IDENTIFIER_LENGTH = 255
+    MAX_STRING_LENGTH = 10000
+    MAX_NUMBER_LENGTH = 100
+    MAX_SOURCE_LENGTH = 1000000  # 1MB
+    
     def __init__(self, source_code: str):
-        self.source = source_code
+        # 边界检查：源代码长度
+        if len(source_code) > self.MAX_SOURCE_LENGTH:
+            raise ValueError(f"源代码过长（超过 {self.MAX_SOURCE_LENGTH} 字符）")
+        
+        self.source = source_code if source_code else ""
         self.pos = 0
         self.line = 1
         self.column = 1
@@ -173,6 +188,11 @@ class Lexer:
         
         # 读取整数部分
         while self.current_char() and self.current_char().isdigit():
+            # 边界检查：数字长度
+            if self.pos - start_pos >= self.MAX_NUMBER_LENGTH:
+                return Token(TokenType.ERROR, 
+                           f"数字过长（超过 {self.MAX_NUMBER_LENGTH} 位）", 
+                           start_line, start_column)
             self.advance()
         
         # 检查是否有小数点
@@ -182,11 +202,30 @@ class Lexer:
             
             # 读取小数部分
             while self.current_char() and self.current_char().isdigit():
+                if self.pos - start_pos >= self.MAX_NUMBER_LENGTH:
+                    return Token(TokenType.ERROR, 
+                               f"数字过长（超过 {self.MAX_NUMBER_LENGTH} 位）", 
+                               start_line, start_column)
                 self.advance()
         
         num_str = self.source[start_pos:self.pos]
-        token_type = TokenType.REAL if is_real else TokenType.INTEGER
         
+        # 边界检查：数值范围
+        try:
+            if is_real:
+                value = float(num_str)
+                # 检查是否溢出
+                if value == float('inf') or value == float('-inf'):
+                    return Token(TokenType.ERROR, f"浮点数溢出", start_line, start_column)
+            else:
+                value = int(num_str)
+                # 检查整数范围（假设使用 32 位整数）
+                if value > 2147483647 or value < -2147483648:
+                    return Token(TokenType.ERROR, f"整数超出范围", start_line, start_column)
+        except (ValueError, OverflowError):
+            return Token(TokenType.ERROR, f"数字格式错误", start_line, start_column)
+        
+        token_type = TokenType.REAL if is_real else TokenType.INTEGER
         return Token(token_type, num_str, start_line, start_column)
     
     def read_identifier(self) -> Token:
@@ -196,9 +235,18 @@ class Lexer:
         start_pos = self.pos
         
         while self.current_char() and (self.current_char().isalnum() or self.current_char() == '_'):
+            # 边界检查：标识符长度
+            if self.pos - start_pos >= self.MAX_IDENTIFIER_LENGTH:
+                return Token(TokenType.ERROR, 
+                           f"标识符过长（超过 {self.MAX_IDENTIFIER_LENGTH} 字符）", 
+                           start_line, start_column)
             self.advance()
         
         id_str = self.source[start_pos:self.pos]
+        
+        # 边界检查：空标识符
+        if not id_str:
+            return Token(TokenType.ERROR, "空标识符", start_line, start_column)
         
         # 检查是否为关键字
         id_lower = id_str.lower()
@@ -216,6 +264,16 @@ class Lexer:
         start_pos = self.pos
         
         while self.current_char() and self.current_char() != quote_char:
+            # 边界检查：字符串长度
+            if self.pos - start_pos >= self.MAX_STRING_LENGTH:
+                return Token(TokenType.ERROR, 
+                           f"字符串过长（超过 {self.MAX_STRING_LENGTH} 字符）", 
+                           start_line, start_column)
+            
+            # 边界检查：不允许字符串跨行（除非转义）
+            if self.current_char() == '\n':
+                return Token(TokenType.ERROR, "字符串不能跨行", start_line, start_column)
+            
             # 处理转义字符
             if self.current_char() == '\\':
                 self.advance()

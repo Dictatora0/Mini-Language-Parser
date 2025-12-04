@@ -27,25 +27,59 @@ class ParseError(Exception):
 
 
 class ASTParser:
-    """递归下降语法分析器 (生成 AST)"""
+    """
+    AST 生成器
+    在解析的同时构建抽象语法树
+    """
+    
+    # 限制常量
+    MAX_RECURSION_DEPTH = 100
+    MAX_NESTING_DEPTH = 50
+    MAX_EXPRESSION_DEPTH = 50
     
     def __init__(self, tokens: List[Token], source_code: str = ""):
         self.tokens = tokens
+        self.source_code = source_code
         self.pos = 0
         self.current_token = tokens[0] if tokens else None
         self.errors: List[str] = []
         self.success = True
-        self.source_code = source_code
-        self.source_lines = source_code.split('\n') if source_code else []
         
         # 符号表
         self.symbol_table = ScopedSymbolTable()
+        
+        # 递归深度跟踪
+        self.recursion_depth = 0
+        self.nesting_depth = 0
+        self.expression_depth = 0
+        self.source_lines = source_code.split('\n') if source_code else []
     
     def get_source_line(self, line_number: int) -> str:
         """获取源代码的特定行"""
         if 0 < line_number <= len(self.source_lines):
             return self.source_lines[line_number - 1]
         return ""
+    
+    def check_recursion_depth(self, context: str = ""):
+        """检查递归深度，防止栈溢出"""
+        if self.recursion_depth >= self.MAX_RECURSION_DEPTH:
+            self.error(f"递归层次过深（超过 {self.MAX_RECURSION_DEPTH} 层）{context}")
+            return False
+        return True
+    
+    def check_nesting_depth(self):
+        """检查嵌套深度"""
+        if self.nesting_depth >= self.MAX_NESTING_DEPTH:
+            self.error(f"嵌套层次过深（超过 {self.MAX_NESTING_DEPTH} 层）")
+            return False
+        return True
+    
+    def check_expression_depth(self):
+        """检查表达式深度"""
+        if self.expression_depth >= self.MAX_EXPRESSION_DEPTH:
+            self.error(f"表达式嵌套过深（超过 {self.MAX_EXPRESSION_DEPTH} 层）")
+            return False
+        return True
     
     def advance(self):
         """移动到下一个 token"""
@@ -248,6 +282,8 @@ class ASTParser:
                       | <if_stmt>
                       | <while_stmt>
                       | <block>
+                      | <write_stmt>
+                      | <read_stmt>
                       | ε
         """
         if self.check(TokenType.IDENTIFIER):
@@ -258,6 +294,10 @@ class ASTParser:
             return self.while_stmt()
         elif self.check(TokenType.BEGIN):
             return self.block()
+        elif self.check(TokenType.WRITE):
+            return self.write_stmt()
+        elif self.check(TokenType.READ):
+            return self.read_stmt()
         elif self.check(TokenType.END, TokenType.SEMICOLON):
             # 空语句
             return EmptyStatement()
@@ -355,6 +395,65 @@ class ASTParser:
             body=body,
             line=while_token.line,
             column=while_token.column
+        )
+    
+    def write_stmt(self) -> Optional[WriteStatement]:
+        """
+        <write_stmt> ::= "write" "(" <expression> ")"
+        """
+        write_token = self.current_token
+        if not self.expect(TokenType.WRITE):
+            return None
+        
+        if not self.expect(TokenType.LPAREN, "write 语句后期望 '('"):
+            self.synchronize({TokenType.SEMICOLON, TokenType.END})
+            return None
+        
+        expr = self.expression()
+        if not expr:
+            self.error("write 语句中缺少表达式")
+            self.synchronize({TokenType.RPAREN, TokenType.SEMICOLON})
+            return None
+        
+        if not self.expect(TokenType.RPAREN, "write 语句缺少 ')'"):
+            self.synchronize({TokenType.SEMICOLON, TokenType.END})
+        
+        return WriteStatement(
+            expression=expr,
+            line=write_token.line,
+            column=write_token.column
+        )
+    
+    def read_stmt(self) -> Optional[ReadStatement]:
+        """
+        <read_stmt> ::= "read" "(" IDENTIFIER ")"
+        """
+        read_token = self.current_token
+        if not self.expect(TokenType.READ):
+            return None
+        
+        if not self.expect(TokenType.LPAREN, "read 语句后期望 '('"):
+            self.synchronize({TokenType.SEMICOLON, TokenType.END})
+            return None
+        
+        var_token = self.expect(TokenType.IDENTIFIER, "read 语句中期望变量名")
+        if not var_token:
+            self.synchronize({TokenType.RPAREN, TokenType.SEMICOLON})
+            return None
+        
+        var_name = var_token.value
+        
+        # 检查变量是否已声明
+        if not self.symbol_table.exists(var_name):
+            self.error(f"变量 '{var_name}' 未声明")
+        
+        if not self.expect(TokenType.RPAREN, "read 语句缺少 ')'"):
+            self.synchronize({TokenType.SEMICOLON, TokenType.END})
+        
+        return ReadStatement(
+            variable=var_name,
+            line=read_token.line,
+            column=read_token.column
         )
     
     def condition(self) -> Optional[Expression]:
@@ -566,8 +665,17 @@ class ASTParser:
 
 # ==================== 便捷函数 ====================
 
-def parse_to_ast(source_code: str) -> tuple[Optional[Program], List[str], ScopedSymbolTable]:
-    """从源代码解析并生成 AST"""
+def parse_to_ast(source_code: str, enable_semantic_check: bool = True) -> tuple[Optional[Program], List[str], ScopedSymbolTable]:
+    """
+    从源代码解析并生成 AST
+    
+    Args:
+        source_code: 源代码字符串
+        enable_semantic_check: 是否启用语义检查（默认启用）
+    
+    Returns:
+        (ast, errors, symbol_table) 元组
+    """
     lexer = Lexer(source_code)
     tokens = lexer.tokenize()
     
@@ -580,8 +688,22 @@ def parse_to_ast(source_code: str) -> tuple[Optional[Program], List[str], Scoped
     if errors:
         return None, errors, None
     
+    # 语法分析
     parser = ASTParser(tokens, source_code)
     ast = parser.parse()
+    
+    # 如果语法分析有错误，直接返回
+    if parser.errors:
+        return ast, parser.errors, parser.symbol_table
+    
+    # 语义分析（可选）
+    if enable_semantic_check and ast and parser.symbol_table:
+        from .semantic_analyzer import analyze_semantics
+        semantic_errors = analyze_semantics(ast, parser.symbol_table)
+        if semantic_errors:
+            # 合并错误
+            all_errors = parser.errors + semantic_errors
+            return ast, all_errors, parser.symbol_table
     
     return ast, parser.errors, parser.symbol_table
 

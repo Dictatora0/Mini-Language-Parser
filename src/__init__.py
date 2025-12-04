@@ -10,12 +10,14 @@ from .parser_ast import (
 )
 from .ast_nodes import (
     ASTNode, Program, Block, Statement, Expression,
-    Assignment, IfStatement, WhileStatement,
+    Assignment, IfStatement, WhileStatement, EmptyStatement,
+    WriteStatement, ReadStatement,
     BinaryOp, UnaryOp, Number, String, Boolean, Variable,
     VarDeclarations, VarDecl,
     ASTPrinter, print_ast
 )
 from .symbol_table import SymbolTable, Symbol, SymbolType, ScopedSymbolTable
+from .semantic_analyzer import SemanticAnalyzer, analyze_semantics, SemanticError
 from .interpreter import Interpreter, run_program
 
 __version__ = "2.0.0"

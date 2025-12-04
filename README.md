@@ -1,130 +1,85 @@
-# Mini 语言语法分析器
+# Mini 语言编译器
 
-## 📚 项目简介
+编译原理课程实验项目。包含完整的编译器前端（词法、语法、语义分析）和解释器。
 
-这是一个完整的 Mini 语言编译器前端实现，包含词法分析器、语法分析器、AST 生成器、符号表管理和解释器。该项目是《编译原理》课程的实验项目，不仅能检查语法正确性，还能实际执行 Mini 语言程序并查看运行结果。
+## 功能
 
-### � 主要功能
+### 编译器组件
 
-- **AST 生成**：构建完整的抽象语法树
-- **符号表管理**：跟踪变量声明，检测未声明和重复声明
-- **变量声明**：支持 `var` 关键字和类型系统（integer, real, boolean, string）
-- **程序执行**：内置解释器，可直接运行 Mini 程序
-- **增强词法**：支持整数、浮点数、字符串、布尔值
-- **精确错误提示**：显示错误源代码行和精确指针
-- **可扩展架构**：基于访问者模式，易于扩展
+- 词法分析器：识别 token，支持整数、浮点数、字符串、布尔值
+- 语法分析器：递归下降解析，生成 AST
+- 语义分析器：类型检查、变量声明检查、运算合法性验证
+- 符号表：作用域管理、类型记录
+- 解释器：执行 AST，支持 I/O 操作
 
-### ✨ 核心特性
+### 语言特性
 
-- ✅ **完整的词法分析**：整数、浮点数、字符串、布尔值、运算符
-- ✅ **递归下降语法分析**：基于 LL(1) 文法，生成 AST
-- ✅ **符号表管理**：变量声明检查、类型记录、作用域支持
-- ✅ **精确的错误报告**：源码行显示 + 错误指针 + 详细信息
-- ✅ **错误恢复机制**：使用同步集进行错误恢复
-- ✅ **程序执行**：内置解释器，可直接运行 Mini 程序
-- ✅ **完整的测试套件**：包含 40+ 个测试用例
-- ✅ **多种使用方式**：语法检查、AST 生成、程序执行
+**数据类型**
 
----
+- integer, real, boolean, string
 
-## 🔤 Mini 语言特性
+**运算符**
 
-### 支持的语法结构
+- 算术：`+` `-` `*` `/`
+- 关系：`<` `<=` `>` `>=` `=` `<>`
+- 逻辑：`and` `or` `not`
 
-1. **算术表达式**
+**语句**
 
-   - 运算符: `+`, `-`, `*`, `/`
-   - 支持括号和一元负号
-   - 正确的运算符优先级
+- 变量声明：`var x, y : integer;`
+- 赋值：`x := expression`
+- 条件：`if condition then statement [else statement]`
+- 循环：`while condition do statement`
+- I/O：`write(expression)` `read(variable)`
 
-2. **逻辑表达式**
+**程序结构**
 
-   - 逻辑运算符: `and`, `or`, `not`
-   - 关系运算符: `<`, `<=`, `>`, `>=`, `=`, `<>`
-   - 支持括号改变优先级
-
-3. **赋值语句**
-
-   ```pascal
-   identifier := expression
-   ```
-
-4. **条件语句**
-
-   ```pascal
-   if condition then statement
-   if condition then statement else statement
-   ```
-
-5. **循环语句**
-
-   ```pascal
-   while condition do statement
-   while condition do begin statement_list end
-   ```
-
-6. **程序结构**
-   ```pascal
-   program identifier;
-   begin
-       statement_list
-   end.
-   ```
-
----
-
-## 📁 项目结构
-
-```
-Mini-Language-Parser/
-├── README.md              # 项目说明文档
-├── Makefile               # 项目管理命令
-├── setup.py               # 安装配置
-├── main.py                # 主程序入口
-├── demo_ast.py            # 功能演示程序
-├── src/                   # 核心源代码
-│   ├── lexer.py           # 词法分析器
-│   ├── parser.py          # 语法分析器（兼容版）
-│   ├── parser_ast.py      # AST 生成器
-│   ├── ast_nodes.py       # AST 节点定义
-│   ├── symbol_table.py    # 符号表管理
-│   └── interpreter.py     # 解释器
-├── tests/                 # 测试文件
-│   └── test_cases.py      # 完整测试套件
-├── data/                  # 示例程序
-│   ├── correct_example*.txt
-│   ├── error_example*.txt
-│   └── enhanced_example*.txt
-└── docs/                  # 文档
-    ├── GRAMMAR.md         # 完整的 EBNF 文法定义
-    ├── QUICK_START.md     # 快速入门指南
-    ├── IMPROVEMENTS.md    # 技术改进说明
-    └── PROJECT_STRUCTURE.md # 项目结构说明
+```pascal
+program name;
+var
+    declarations
+begin
+    statements
+end.
 ```
 
----
+## 安装使用
 
-## 🚀 快速开始
+### 要求
 
-### 3 分钟快速体验
+- Python 3.7+
+- 无额外依赖
 
-#### 1. 运行完整演示
+### 快速开始
 
-```bash
-python3 demo_ast.py
+**1. 语法检查**
+
+```python
+from src import parse_from_source
+
+code = "program test; var x:integer; begin x := 10 end."
+result = parse_from_source(code)
+print(result)
 ```
 
-这将展示：AST 生成、符号表、解释器、错误处理等所有功能！
+**2. 生成 AST**
 
-#### 2. 执行 Mini 程序
+```python
+from src import parse_to_ast, print_ast
+
+ast, errors, symbol_table = parse_to_ast(code)
+if not errors:
+    print(print_ast(ast))
+```
+
+**3. 执行程序**
 
 ```python
 from src import run_program
 
 code = """
 program factorial;
-var
-    n, fact : integer;
+var n, fact: integer;
 begin
     n := 5;
     fact := 1;
@@ -132,588 +87,284 @@ begin
     begin
         fact := fact * n;
         n := n - 1
-    end
+    end;
+    write(fact)
 end.
 """
 
 final_state, result = run_program(code)
-print(result)
-# 输出：fact = 120
 ```
 
-#### 3. 生成和查看 AST
-
-```python
-from src import parse_to_ast, print_ast
-
-ast, errors, symbol_table = parse_to_ast(code)
-if not errors:
-    print(print_ast(ast))  # 打印 AST 树形结构
-    print(symbol_table.get_global_scope().print_table())  # 打印符号表
-```
-
-📖 **详细教程**: 查看 [快速入门指南](docs/QUICK_START.md)
-
----
-
-### 环境要求
-
-- Python 3.7+
-- 无需额外依赖库
-
-### 安装
+### 命令行使用
 
 ```bash
-# 克隆或下载项目到本地
-cd Mini-Language-Parser
+# 运行演示
+python3 demo_final.py
+
+# 运行测试
+python3 main.py --test
+
+# 交互模式
+python3 main.py -i
 ```
 
-### 使用方法
+## 项目结构
 
-#### 1. 交互式菜单（推荐新手）
+```
+src/
+├── lexer.py              # 词法分析（420 行）
+├── parser_ast.py         # 语法分析 + AST 生成（730 行）
+├── ast_nodes.py          # AST 节点定义（330 行）
+├── semantic_analyzer.py  # 语义分析（320 行）
+├── symbol_table.py       # 符号表（184 行）
+└── interpreter.py        # 解释器（320 行）
+
+tests/
+└── test_cases.py         # 测试套件（40+ 用例）
+
+*.py
+├── main.py               # 主程序入口
+├── demo_final.py         # 完整功能演示
+├── test_robustness.py    # 鲁棒性测试
+└── test_improvements.py  # 改进功能测试
+
+data/
+├── correct_example*.txt  # 正确程序示例
+├── error_example*.txt    # 错误程序示例
+└── enhanced_example*.txt # 增强功能示例
+
+docs/
+├── GRAMMAR.md            # 完整文法定义
+├── QUICK_START.md        # 使用指南
+├── IMPROVEMENTS.md       # 技术实现详解
+├── ROBUSTNESS.md         # 鲁棒性文档
+└── PROJECT_STRUCTURE.md  # 项目结构说明
+```
+
+## 实现细节
+
+### 词法分析
+
+- 手工编写的状态机
+- 支持单行注释 `//` 和块注释 `{}`
+- 限制：标识符 255 字符，字符串 10000 字符，数字 100 位
+
+### 语法分析
+
+- LL(1) 文法，递归下降实现
+- 错误恢复使用同步集
+- 递归深度限制 100 层，嵌套深度限制 50 层
+
+### 语义分析
+
+- 静态类型检查
+- 检测类型不匹配、未声明变量、重复声明
+- 验证运算合法性（如不能对 boolean 做算术运算）
+- 检查条件表达式类型（if/while 条件必须是 boolean）
+
+### 解释器
+
+- AST 遍历执行
+- 循环次数限制 10000 次
+- 输出行数限制 1000 行
+- 错误检测：除零、溢出、NaN/Infinity
+
+## 错误处理
+
+**词法错误示例**
+
+```
+词法错误 [行2:列5]: 标识符过长（超过 255 字符）
+```
+
+**语法错误示例**
+
+```
+语法错误 [行3:列10]: 期望 ';'
+  x := 10  y := 20;
+           ^
+```
+
+**语义错误示例**
+
+```
+语义错误 [行5:列5]: 类型不匹配: 不能将 STRING 类型赋值给 INTEGER 类型的变量 'x'
+  x := "hello"
+       ^
+```
+
+**运行时错误示例**
+
+```
+运行时错误: 除零错误
+  位置: 行7, 列15
+```
+
+## 限制和约束
+
+| 项目       | 限制         | 说明       |
+| ---------- | ------------ | ---------- |
+| 源代码长度 | 1 MB         | 词法层检查 |
+| 标识符长度 | 255 字符     | 词法层检查 |
+| 字符串长度 | 10,000 字符  | 词法层检查 |
+| 数字长度   | 100 位       | 词法层检查 |
+| 整数范围   | -2³¹ ~ 2³¹-1 | 词法层检查 |
+| 递归深度   | 100 层       | 语法层检查 |
+| 嵌套深度   | 50 层        | 语法层检查 |
+| 循环次数   | 10,000 次    | 运行时检查 |
+| 输出行数   | 1,000 行     | 运行时检查 |
+
+## 测试
+
+**运行所有测试**
 
 ```bash
-python main.py
+python3 main.py --test
 ```
 
-然后根据菜单选择操作：
-
-- 运行示例程序
-- 运行完整测试
-- 交互式输入
-- 分析文件
-
-#### 2. 分析源代码文件
+**运行鲁棒性测试**
 
 ```bash
-python main.py example.txt
+python3 test_robustness.py
 ```
 
-#### 3. 从 Token 文件分析
+**运行功能演示**
 
 ```bash
-# 先生成 Token 文件
-python lexer.py
-
-# 然后分析 Token 文件
-python main.py -t tokens.txt
+python3 demo_final.py
 ```
 
-#### 4. 交互式输入
+**测试覆盖**
 
-```bash
-python main.py -i
+- 词法分析：边界值、异常字符、长度限制
+- 语法分析：各种语句组合、深层嵌套
+- 语义分析：类型检查、变量声明
+- 解释器：算术运算、控制流、I/O
+- 鲁棒性：除零、溢出、无限循环
+
+## 文法
+
+完整的 EBNF 文法见 `docs/GRAMMAR.md`
+
+核心规则：
+
+```ebnf
+<program> ::= "program" IDENTIFIER ";" [<var_decl>] <block> "."
+<var_decl> ::= "var" <decl_list>
+<decl_list> ::= IDENTIFIER {"," IDENTIFIER} ":" <type> ";"
+<block> ::= "begin" <statement_list> "end"
+<statement> ::= <assignment> | <if_stmt> | <while_stmt> | <write_stmt> | <read_stmt>
+<expression> ::= <term> {("+" | "-") <term>}
+<term> ::= <factor> {("*" | "/") <factor>}
+<factor> ::= NUMBER | STRING | BOOLEAN | IDENTIFIER | "(" <expression> ")" | "-" <factor>
 ```
 
-然后输入 Mini 语言代码，以 `END` 结束。
+## API 参考
 
-#### 5. 运行测试套件
+### parse_from_source(code: str) -> str
 
-```bash
-python main.py --test
-```
+只进行语法检查，返回结果字符串。
 
-#### 6. 运行示例程序
+### parse_to_ast(code: str, enable_semantic_check: bool = True) -> tuple
 
-```bash
-python main.py --demo
-```
+返回 (ast, errors, symbol_table)。
 
----
+- ast: Program 对象或 None
+- errors: 错误消息列表
+- symbol_table: ScopedSymbolTable 对象
 
-## 📖 使用示例
+### run_program(code: str, debug: bool = False) -> tuple
 
-### 示例 1: 正确的程序
+解析并执行程序，返回 (final_state, result)。
 
-**输入:**
+- final_state: 变量最终值的字典
+- result: 执行结果消息
+
+### print_ast(ast: Program) -> str
+
+将 AST 转换为树形字符串表示。
+
+## 示例程序
+
+**斐波那契数列**
 
 ```pascal
-program example1;
+program fibonacci;
+var n, a, b, temp, i: integer;
 begin
-    x := 10;
-    y := 20;
-    if x < y then
-        z := x + y
-    else
-        z := x - y
-end.
-```
+    n := 10;
+    a := 0;
+    b := 1;
+    i := 1;
 
-**输出:**
+    write(a);
+    write(b);
 
-```
-该程序符合语法要求。
-```
-
-### 示例 2: 表达式错误
-
-**输入:**
-
-```pascal
-program test;
-begin
-    i := 1 +
-end.
-```
-
-**输出:**
-
-```
-语法错误 [行3:列18]: 表达式错误: 期望标识符、数字或表达式，但得到 'end'
-```
-
-### 示例 3: 缺少 then
-
-**输入:**
-
-```pascal
-program test;
-begin
-    if x > 0
-        y := 1
-end.
-```
-
-**输出:**
-
-```
-语法错误 [行4:列9]: if 语句缺少 'then'
-```
-
-### 示例 4: 复杂嵌套
-
-**输入:**
-
-```pascal
-program complex;
-begin
-    x := 10;
-    while x > 0 do
+    while i < n do
     begin
-        if x > 5 then
-            y := x * 2
-        else
-        begin
-            y := x + 1;
-            z := y - 1
-        end;
-        x := x - 1
+        temp := a + b;
+        a := b;
+        b := temp;
+        write(temp);
+        i := i + 1
     end
 end.
 ```
 
-**输出:**
+更多示例见 `data/` 目录。
 
-```
-该程序符合语法要求。
-```
+## 已知问题
 
----
+1. 解释器中所有数值统一为 float，INTEGER 类型在运行时不区分
+2. 除法始终是浮点除法，无 div 运算符
+3. 不支持函数和过程
+4. 不支持数组和记录类型
+5. read 语句在非交互环境下无法使用
 
-## 🎯 语法分析实现细节
+## 扩展方向
 
-### 1. 文法设计
+- 函数和过程定义
+- 数组和记录类型
+- 模块系统
+- 强类型运行时检查
+- div 和 mod 运算符
+- 中间代码生成
+- 代码优化
 
-完整的 EBNF 文法请参见 [GRAMMAR.md](GRAMMAR.md)
+## 开发
 
-**核心文法规则:**
-
-```ebnf
-<program> ::= "program" IDENTIFIER ";" <block> "."
-<block> ::= "begin" <statement_list> "end"
-<statement> ::= <assignment> | <if_stmt> | <while_stmt> | <block>
-<expression> ::= <term> { ("+" | "-") <term> }
-<term> ::= <factor> { ("*" | "/") <factor> }
-<factor> ::= IDENTIFIER | NUMBER | "(" <expression> ")" | "-" <factor>
-```
-
-### 2. 递归下降分析
-
-为每个非终结符实现一个解析函数：
-
-- `program()` - 解析程序结构
-- `block()` - 解析 begin-end 块
-- `statement()` - 解析语句
-- `expression()` - 解析算术表达式
-- `condition()` - 解析条件表达式
-- `term()`, `factor()` - 解析项和因子
-
-### 3. 错误处理策略
-
-#### 错误检测
-
-- 在每个 `expect()` 调用处检测语法错误
-- 记录详细的错误信息（类型、位置）
-
-#### 错误恢复
-
-使用**同步集（Synchronization Set）**进行错误恢复：
-
-```python
-def synchronize(self, sync_set: Set[TokenType]):
-    """跳过 token 直到遇到同步集中的 token"""
-    while not self.match(TokenType.EOF) and \
-          self.current_token.type not in sync_set:
-        self.advance()
-```
-
-**同步集设计：**
-
-- 语句级别: `{SEMICOLON, END}`
-- 表达式级别: `{SEMICOLON, RPAREN, THEN, DO}`
-- 程序级别: `{BEGIN, END, DOT}`
-
-### 4. 优先级处理
-
-通过文法结构自然表达优先级：
-
-```
-优先级（从高到低）:
-1. 括号 ()
-2. 一元运算符 -, not
-3. 乘除 *, /
-4. 加减 +, -
-5. 关系运算 <, <=, >, >=, =, <>
-6. 逻辑与 and
-7. 逻辑或 or
-```
-
----
-
-## 🧪 测试说明
-
-### 测试用例分类
-
-1. **正确程序** (10 个测试)
-
-   - 简单赋值和算术运算
-   - if-then / if-then-else
-   - while-do / while-do-begin-end
-   - 嵌套结构
-   - 逻辑表达式
-
-2. **表达式错误** (4 个测试)
-
-   - 算术表达式不完整
-   - 缺少运算数
-   - 括号不匹配
-
-3. **语句错误** (5 个测试)
-
-   - 缺少赋值运算符
-   - 缺少分号
-   - if 缺少 then
-   - while 缺少 do
-   - 条件表达式错误
-
-4. **结构错误** (6 个测试)
-
-   - 缺少关键字（program, begin, end）
-   - 缺少标点符号
-   - begin-end 不匹配
-
-5. **边界情况** (4 个测试)
-   - 空程序
-   - 单语句程序
-   - 深层嵌套
-
-### 运行测试
+**代码格式化**
 
 ```bash
-# 运行完整测试套件
-python3 main.py --test
+make format
+```
 
-# 或使用 Make 命令
+**运行测试**
+
+```bash
 make test
 ```
 
-**预期输出：**
+**清理临时文件**
 
-```
-测试总结: 29/29 通过
-🎉 所有测试通过！
-```
-
----
-
-## 🔗 与词法分析器对接
-
-### Token 文件格式
-
-词法分析器生成的 Token 文件格式：
-
-```
-TOKEN_TYPE    VALUE    LINE    COLUMN
-PROGRAM       program  1       1
-IDENTIFIER    example  1       9
-SEMICOLON     ;        1       16
-...
-EOF                    10      5
+```bash
+make clean
 ```
 
-### 对接方式
+## 技术栈
 
-#### 方式 1: 直接从源代码分析（推荐）
+- 语言：Python 3.7+
+- 模式：访问者模式（AST 遍历）
+- 文法：LL(1)
+- 解析：递归下降
+- 错误恢复：同步集
 
-```python
-from src import parse_from_source
+## 课程信息
 
-source_code = """
-program test;
-begin
-    x := 1
-end.
-"""
+- 课程：编译原理
+- 项目：Mini 语言编译器
+- 实现：完整的编译器前端 + 解释器
 
-result = parse_from_source(source_code)
-print(result)
-```
+## 许可
 
-#### 方式 2: AST 生成
-
-```python
-from src import parse_to_ast, print_ast
-
-ast, errors, symbol_table = parse_to_ast(source_code)
-if not errors:
-    print(print_ast(ast))
-```
-
-#### 方式 3: 程序执行
-
-```python
-from src import run_program
-
-final_state, result = run_program(source_code)
-print(result)
-print(f"变量值: {final_state}")
-```
-
----
-
-## 📊 技术实现总结
-
-### 核心算法
-
-| 模块     | 算法           | 时间复杂度 |
-| -------- | -------------- | ---------- |
-| 词法分析 | 有限状态自动机 | O(n)       |
-| 语法分析 | 递归下降       | O(n)       |
-| 错误恢复 | 同步集法       | O(n)       |
-
-其中 n 为输入长度。
-
-### 文法特性
-
-- **文法类型**: LL(1)
-- **左递归**: 已消除
-- **左因子**: 已提取
-- **二义性**: 无
-
-### 错误处理能力
-
-- ✅ 检测所有语法错误
-- ✅ 精确报告错误位置（行号、列号）
-- ✅ 提供有意义的错误信息
-- ✅ 错误恢复（能继续检测后续错误）
-
----
-
-## 🎓 学习要点
-
-### 编译原理概念
-
-本项目实践了以下编译原理概念：
-
-1. **词法分析**
-
-   - Token 识别
-   - 关键字表
-   - 有限状态自动机
-
-2. **语法分析**
-
-   - 上下文无关文法
-   - 递归下降分析
-   - LL(1) 分析
-   - First/Follow 集合
-
-3. **错误处理**
-
-   - 错误检测
-   - 错误报告
-   - 错误恢复（同步集）
-
-4. **编译器设计**
-   - 模块化设计
-   - 接口设计
-   - 测试驱动开发
-
----
-
-## 📝 实验报告要点
-
-使用本项目完成实验报告时，建议包含以下内容：
-
-### 1. 文法设计
-
-- 完整的 EBNF 文法（见 GRAMMAR.md）
-- 左递归消除过程
-- 左因子提取说明
-- First/Follow 集合计算
-
-### 2. 程序设计
-
-- 模块划分（词法分析、语法分析）
-- 数据结构设计（Token, Parser）
-- 核心函数流程图
-
-### 3. 错误处理
-
-- 错误类型分类
-- 同步集设计
-- 错误恢复示例
-
-### 4. 测试结果
-
-- 测试用例设计
-- 测试结果截图
-- 覆盖率分析
-
-### 5. 总结与改进
-
-- 实现难点
-- 遇到的问题及解决
-- 可能的改进方向
-
----
-
-## 🔧 扩展与改进
-
-### 已实现功能 ✅
-
-1. **语义分析**
-
-   - ✅ 符号表管理
-   - ✅ 变量声明检查
-   - ✅ 未声明变量检测
-   - ✅ 重复声明检测
-
-2. **AST 生成**
-
-   - ✅ 14 种 AST 节点类型
-   - ✅ 访问者模式架构
-   - ✅ AST 打印和可视化
-
-3. **程序执行**
-   - ✅ 完整的解释器
-   - ✅ 所有语句和表达式支持
-   - ✅ 变量赋值和计算
-
-### 未来扩展方向
-
-1. **类型系统增强**
-
-   - 强类型检查
-   - 类型推导
-   - 类型转换规则
-
-2. **中间代码生成**
-
-   - 三地址码
-   - SSA 形式
-
-3. **代码优化**
-
-   - 常量折叠
-   - 死代码消除
-   - 循环优化
-
-4. **目标代码生成**
-
-   - 汇编代码
-   - 字节码
-
-5. **增强功能**
-   - 函数和过程
-   - 数组和记录
-   - 模块系统
-
----
-
-## 🐛 常见问题
-
-### Q1: 为什么我的程序提示"表达式错误"？
-
-**A:** 检查以下几点：
-
-- 运算符后是否有操作数
-- 括号是否匹配
-- 是否使用了非法字符
-
-### Q2: 如何处理多个错误？
-
-**A:** 程序会尽可能检测多个错误，使用错误恢复机制继续分析。
-
-### Q3: 支持注释吗？
-
-**A:** 支持，词法分析器支持：
-
-- 单行注释: `// ...`
-- 块注释: `{ ... }`
-
-### Q4: Token 文件格式是什么？
-
-**A:** 每行一个 Token，格式为：`TOKEN_TYPE\tVALUE\tLINE\tCOLUMN`
-
----
-
-## 👥 作者信息
-
-**课程**: 编译原理
-**项目**: Mini 语言语法分析器
-**实现**: 完整的词法分析器 + 递归下降语法分析器
-
----
-
-## 📄 许可证
-
-本项目仅用于教学和学习目的。
-
----
-
-## 🙏 致谢
-
-感谢编译原理课程提供的理论基础和实验指导。
-
----
-
-**项目维护**: 持续更新
-
-**联系方式**: 如有问题，请查阅代码注释或相关文档。
-
----
-
-## 附录
-
-### A. 完整示例程序
-
-见 `data/` 目录
-
-### B. 文法完整定义
-
-见 `docs/GRAMMAR.md`
-
-### C. 测试用例详情
-
-见 `tests/test_cases.py`
-
-### D. 技术文档
-
-- `docs/QUICK_START.md` - 快速入门指南
-- `docs/IMPROVEMENTS.md` - 技术改进说明
-- `docs/PROJECT_STRUCTURE.md` - 项目结构说明
-
----
-
-**祝学习顺利！** 🎉
+教学项目，仅用于学习。

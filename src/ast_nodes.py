@@ -98,6 +98,18 @@ class EmptyStatement(Statement):
     pass
 
 
+@dataclass
+class WriteStatement(Statement):
+    """输出语句: write(expression)"""
+    expression: 'Expression' = None
+
+
+@dataclass
+class ReadStatement(Statement):
+    """输入语句: read(identifier)"""
+    variable: str = ""
+
+
 # ==================== 表达式 ====================
 
 @dataclass
@@ -178,6 +190,12 @@ class ASTVisitor:
         pass
     
     def visit_EmptyStatement(self, node: EmptyStatement):
+        pass
+    
+    def visit_WriteStatement(self, node: WriteStatement):
+        pass
+    
+    def visit_ReadStatement(self, node: ReadStatement):
         pass
     
     # 表达式
@@ -276,6 +294,12 @@ class ASTPrinter(ASTVisitor):
     
     def visit_EmptyStatement(self, node: EmptyStatement):
         return "EmptyStatement()"
+    
+    def visit_WriteStatement(self, node: WriteStatement):
+        return f"Write({node.expression.accept(self)})"
+    
+    def visit_ReadStatement(self, node: ReadStatement):
+        return f"Read({node.variable})"
     
     def visit_BinaryOp(self, node: BinaryOp):
         return f"({node.left.accept(self)} {node.op.value} {node.right.accept(self)})"
