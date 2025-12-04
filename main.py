@@ -6,7 +6,7 @@ Mini 语言语法分析器 - 主程序
 import sys
 import os
 from src.lexer import Lexer
-from src.parser import parse_from_source, parse_from_file
+from src import parse_from_source, parse_from_file
 
 
 def print_banner():

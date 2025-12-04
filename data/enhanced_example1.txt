@@ -1,0 +1,11 @@
+program enhanced_example;
+var
+    x, y : integer;
+    sum : real;
+begin
+    x := 10;
+    y := 20;
+    sum := x + y;
+    if sum > 25.0 then
+        sum := sum * 2
+end.

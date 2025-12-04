@@ -14,6 +14,7 @@ class TokenType(Enum):
     PROGRAM = auto()
     BEGIN = auto()
     END = auto()
+    VAR = auto()         # 变量声明
     IF = auto()
     THEN = auto()
     ELSE = auto()
@@ -22,10 +23,21 @@ class TokenType(Enum):
     AND = auto()
     OR = auto()
     NOT = auto()
+    TRUE = auto()        # 布尔值
+    FALSE = auto()
+    
+    # 类型关键字
+    INTEGER_TYPE = auto()
+    REAL_TYPE = auto()
+    BOOLEAN_TYPE = auto()
+    STRING_TYPE = auto()
     
     # 标识符和字面量
     IDENTIFIER = auto()
-    NUMBER = auto()
+    INTEGER = auto()     # 整数字面量
+    REAL = auto()        # 浮点数字面量
+    STRING = auto()      # 字符串字面量
+    COLON = auto()       # :
     
     # 运算符
     PLUS = auto()        # +
@@ -77,6 +89,7 @@ class Lexer:
         'program': TokenType.PROGRAM,
         'begin': TokenType.BEGIN,
         'end': TokenType.END,
+        'var': TokenType.VAR,
         'if': TokenType.IF,
         'then': TokenType.THEN,
         'else': TokenType.ELSE,
@@ -85,6 +98,13 @@ class Lexer:
         'and': TokenType.AND,
         'or': TokenType.OR,
         'not': TokenType.NOT,
+        'true': TokenType.TRUE,
+        'false': TokenType.FALSE,
+        # 类型关键字
+        'integer': TokenType.INTEGER_TYPE,
+        'real': TokenType.REAL_TYPE,
+        'boolean': TokenType.BOOLEAN_TYPE,
+        'string': TokenType.STRING_TYPE,
     }
     
     def __init__(self, source_code: str):
@@ -145,32 +165,73 @@ class Lexer:
         return False
     
     def read_number(self) -> Token:
-        """读取数字"""
+        """读取数字（支持整数和浮点数）"""
         start_line = self.line
         start_column = self.column
-        num_str = ''
+        start_pos = self.pos
+        is_real = False
         
+        # 读取整数部分
         while self.current_char() and self.current_char().isdigit():
-            num_str += self.current_char()
             self.advance()
         
-        return Token(TokenType.NUMBER, num_str, start_line, start_column)
+        # 检查是否有小数点
+        if self.current_char() == '.' and self.peek_char() and self.peek_char().isdigit():
+            is_real = True
+            self.advance()  # 跳过小数点
+            
+            # 读取小数部分
+            while self.current_char() and self.current_char().isdigit():
+                self.advance()
+        
+        num_str = self.source[start_pos:self.pos]
+        token_type = TokenType.REAL if is_real else TokenType.INTEGER
+        
+        return Token(token_type, num_str, start_line, start_column)
     
     def read_identifier(self) -> Token:
-        """读取标识符或关键字"""
+        """读取标识符或关键字（优化版本）"""
         start_line = self.line
         start_column = self.column
-        id_str = ''
+        start_pos = self.pos
         
         while self.current_char() and (self.current_char().isalnum() or self.current_char() == '_'):
-            id_str += self.current_char()
             self.advance()
+        
+        id_str = self.source[start_pos:self.pos]
         
         # 检查是否为关键字
         id_lower = id_str.lower()
         token_type = self.KEYWORDS.get(id_lower, TokenType.IDENTIFIER)
         
         return Token(token_type, id_str, start_line, start_column)
+    
+    def read_string(self) -> Token:
+        """读取字符串字面量"""
+        start_line = self.line
+        start_column = self.column
+        quote_char = self.current_char()  # ' 或 "
+        self.advance()  # 跳过开始引号
+        
+        start_pos = self.pos
+        
+        while self.current_char() and self.current_char() != quote_char:
+            # 处理转义字符
+            if self.current_char() == '\\':
+                self.advance()
+                if self.current_char():  # 跳过被转义的字符
+                    self.advance()
+            else:
+                self.advance()
+        
+        if not self.current_char():
+            # 字符串未闭合
+            return Token(TokenType.ERROR, "未闭合的字符串", start_line, start_column)
+        
+        string_value = self.source[start_pos:self.pos]
+        self.advance()  # 跳过结束引号
+        
+        return Token(TokenType.STRING, string_value, start_line, start_column)
     
     def tokenize(self) -> List[Token]:
         """执行词法分析，返回 Token 列表"""
@@ -196,6 +257,11 @@ class Lexer:
             # 标识符或关键字
             if char.isalpha() or char == '_':
                 self.tokens.append(self.read_identifier())
+                continue
+            
+            # 字符串字面量
+            if char in ['"', "'"]:
+                self.tokens.append(self.read_string())
                 continue
             
             # 运算符和分隔符
@@ -232,7 +298,8 @@ class Lexer:
                     self.advance()
                     self.advance()
                 else:
-                    self.tokens.append(Token(TokenType.ERROR, char, start_line, start_column))
+                    # 单独的冒号（用于变量声明）
+                    self.tokens.append(Token(TokenType.COLON, ':', start_line, start_column))
                     self.advance()
             elif char == '<':
                 if self.peek_char() == '=':
