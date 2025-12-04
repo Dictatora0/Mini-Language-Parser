@@ -1,0 +1,17 @@
+program complex_nested;
+begin
+    x := 10;
+    y := 5;
+    while x > 0 do
+    begin
+        if x > 5 then
+        begin
+            y := y + 1;
+            if y > 10 then
+                z := 100
+        end
+        else
+            y := y - 1;
+        x := x - 1
+    end
+end.

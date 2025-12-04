@@ -1,0 +1,5 @@
+program error2;
+begin
+    if x > 0
+        y := 1
+end.

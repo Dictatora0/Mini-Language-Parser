@@ -1,0 +1,9 @@
+program example1;
+begin
+    x := 10;
+    y := 20;
+    if x < y then
+        z := x + y
+    else
+        z := x - y
+end.
