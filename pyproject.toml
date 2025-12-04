@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mini-language-parser"
+version = "1.0.0"
+description = "Mini Language Parser - A complete compiler frontend implementation"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "Educational Use Only"}
+authors = [
+    {name = "Compiler Principles Course"},
+]
+keywords = ["compiler", "parser", "lexer", "ll1", "recursive-descent"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Education",
+    "Topic :: Education",
+    "Topic :: Software Development :: Compilers",
+    "License :: Educational Use Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[project.scripts]
+mini-parser = "main:main"
+
+[tool.black]
+line-length = 100
+target-version = ['py37']
+
+[tool.mypy]
+python_version = "3.7"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

@@ -5,8 +5,8 @@ Mini 语言语法分析器 - 主程序
 
 import sys
 import os
-from lexer import Lexer
-from parser import parse_from_source, parse_from_file
+from src.lexer import Lexer
+from src.parser import parse_from_source, parse_from_file
 
 
 def print_banner():
@@ -129,10 +129,10 @@ def run_tests():
     print("\n运行测试套件...")
     print("-" * 70)
     try:
-        from test_cases import run_all_tests
+        from tests.test_cases import run_all_tests
         run_all_tests()
     except ImportError:
-        print("错误: 无法导入测试模块 test_cases.py")
+        print("错误: 无法导入测试模块 tests/test_cases.py")
 
 
 def run_demo():

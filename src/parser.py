@@ -4,7 +4,7 @@ Mini 语言递归下降语法分析器
 """
 
 from typing import List, Optional, Set
-from lexer import Token, TokenType, Lexer
+from .lexer import Token, TokenType, Lexer
 
 
 class ParseError(Exception):

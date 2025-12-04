@@ -3,7 +3,7 @@ Mini 语言语法分析器完整测试用例集
 包含正确程序和各种错误情况的测试
 """
 
-from parser import parse_from_source
+from src.parser import parse_from_source
 
 
 # 测试用例集合
