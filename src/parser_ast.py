@@ -316,10 +316,6 @@ class ASTParser:
             return None
         var_name = var_token.value
         
-        # 检查变量是否已声明
-        if not self.symbol_table.exists(var_name):
-            self.error(f"变量 '{var_name}' 未声明")
-        
         if not self.expect(TokenType.ASSIGN, "赋值语句缺少 ':=' 运算符"):
             self.synchronize({TokenType.SEMICOLON, TokenType.END})
             return None
@@ -442,10 +438,6 @@ class ASTParser:
             return None
         
         var_name = var_token.value
-        
-        # 检查变量是否已声明
-        if not self.symbol_table.exists(var_name):
-            self.error(f"变量 '{var_name}' 未声明")
         
         if not self.expect(TokenType.RPAREN, "read 语句缺少 ')'"):
             self.synchronize({TokenType.SEMICOLON, TokenType.END})
@@ -598,10 +590,6 @@ class ASTParser:
             token = self.current_token
             self.advance()
             
-            # 检查变量是否已声明
-            if not self.symbol_table.exists(token.value):
-                self.error(f"变量 '{token.value}' 未声明")
-            
             return Variable(name=token.value, line=token.line, column=token.column)
         
         # 整数
@@ -731,9 +719,9 @@ def parse_and_print_ast(source_code: str) -> str:
 def parse_from_source(source_code: str) -> str:
     """
     从源代码解析（兼容旧版接口）
-    只返回语法检查结果，不生成 AST
+    只返回语法检查结果，不进行语义检查
     """
-    ast, errors, _ = parse_to_ast(source_code)
+    ast, errors, _ = parse_to_ast(source_code, enable_semantic_check=False)
     
     if errors:
         return "\n".join(errors)

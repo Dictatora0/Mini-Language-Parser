@@ -372,17 +372,17 @@ def run_test(category: str, test_case: dict):
     # 检查结果
     if 'expected' in test_case:
         if result == test_case['expected']:
-            print("✅ 测试通过")
+            print("测试通过")
             return True
         else:
-            print(f"❌ 测试失败，期望: {test_case['expected']}")
+            print(f"测试失败，期望: {test_case['expected']}")
             return False
     elif 'expected_keyword' in test_case:
         if test_case['expected_keyword'] in result:
-            print("✅ 测试通过（包含预期错误信息）")
+            print("测试通过（包含预期错误信息）")
             return True
         else:
-            print(f"❌ 测试失败，期望包含关键字: {test_case['expected_keyword']}")
+            print(f"测试失败，期望包含关键字: {test_case['expected_keyword']}")
             return False
     
     return True
@@ -413,9 +413,9 @@ def run_all_tests():
     print("=" * 80)
     
     if passed_tests == total_tests:
-        print("🎉 所有测试通过！")
+        print("所有测试通过！")
     else:
-        print(f"⚠️  {total_tests - passed_tests} 个测试失败")
+        print(f"{total_tests - passed_tests} 个测试失败")
 
 
 if __name__ == "__main__":
