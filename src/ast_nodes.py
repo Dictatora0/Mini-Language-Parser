@@ -326,3 +326,58 @@ def print_ast(ast: ASTNode) -> str:
     """打印 AST 树形结构"""
     printer = ASTPrinter()
     return ast.accept(printer)
+
+
+def ast_to_dict(node: ASTNode) -> dict:
+    """将 AST 节点转换为字典（用于 JSON 序列化等）"""
+    if node is None:
+        return None
+    
+    result = {
+        'type': node.__class__.__name__,
+        'line': node.line if hasattr(node, 'line') else 0,
+        'column': node.column if hasattr(node, 'column') else 0,
+    }
+    
+    if isinstance(node, Program):
+        result['name'] = node.name
+        result['var_declarations'] = ast_to_dict(node.var_declarations)
+        result['block'] = ast_to_dict(node.block)
+    elif isinstance(node, VarDeclarations):
+        result['declarations'] = [ast_to_dict(d) for d in node.declarations]
+    elif isinstance(node, VarDecl):
+        result['name'] = node.name
+        result['var_type'] = node.var_type
+    elif isinstance(node, Block):
+        result['statements'] = [ast_to_dict(s) for s in node.statements]
+    elif isinstance(node, Assignment):
+        result['variable'] = node.variable
+        result['expression'] = ast_to_dict(node.expression)
+    elif isinstance(node, IfStatement):
+        result['condition'] = ast_to_dict(node.condition)
+        result['then_statement'] = ast_to_dict(node.then_statement)
+        result['else_statement'] = ast_to_dict(node.else_statement)
+    elif isinstance(node, WhileStatement):
+        result['condition'] = ast_to_dict(node.condition)
+        result['body'] = ast_to_dict(node.body)
+    elif isinstance(node, WriteStatement):
+        result['expression'] = ast_to_dict(node.expression)
+    elif isinstance(node, ReadStatement):
+        result['variable'] = node.variable
+    elif isinstance(node, BinaryOp):
+        result['left'] = ast_to_dict(node.left)
+        result['op'] = node.op.value if node.op else None
+        result['right'] = ast_to_dict(node.right)
+    elif isinstance(node, UnaryOp):
+        result['op'] = node.op.value if node.op else None
+        result['operand'] = ast_to_dict(node.operand)
+    elif isinstance(node, Number):
+        result['value'] = node.value
+    elif isinstance(node, String):
+        result['value'] = node.value
+    elif isinstance(node, Boolean):
+        result['value'] = node.value
+    elif isinstance(node, Variable):
+        result['name'] = node.name
+    
+    return result

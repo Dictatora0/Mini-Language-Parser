@@ -1,0 +1,5 @@
+// 表达式错误测试 - 括号不匹配
+program test_expression_error;
+begin
+    result := (a + b
+end.

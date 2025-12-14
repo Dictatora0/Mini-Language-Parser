@@ -1,0 +1,5 @@
+// 赋值语句测试
+program test_assignment;
+begin
+    x := 5 + 3 * (2 - 1)
+end.

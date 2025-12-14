@@ -1,0 +1,6 @@
+// while 错误测试 - 缺少 do
+program test_while_error;
+begin
+    while x > 0
+        x := x - 1
+end.

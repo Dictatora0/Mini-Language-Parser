@@ -191,19 +191,25 @@ class Interpreter(ASTVisitor):
         try:
             # 获取变量的类型
             var_name = node.variable
-            symbol = self.symbol_table.lookup(var_name) if hasattr(self, 'symbol_table') else None
+            symbol = self.symbol_table.lookup(var_name) if self.symbol_table else None
             
             # 提示用户输入
-            user_input = input(f"请输入 {var_name} 的值: ")
+            user_input = input(f"请输入 {var_name} 的值: ").strip()
             
             # 根据变量类型转换输入
             if symbol:
                 if symbol.symbol_type == SymbolType.INTEGER:
-                    value = int(float(user_input))  # 先转浮点再转整数，支持 "10.0" 输入
+                    try:
+                        value = int(float(user_input))  # 先转浮点再转整数，支持 "10.0" 输入
+                    except ValueError:
+                        raise RuntimeError(f"输入格式错误: 期望整数，但得到 '{user_input}'", node)
                 elif symbol.symbol_type == SymbolType.REAL:
-                    value = float(user_input)
+                    try:
+                        value = float(user_input)
+                    except ValueError:
+                        raise RuntimeError(f"输入格式错误: 期望实数，但得到 '{user_input}'", node)
                 elif symbol.symbol_type == SymbolType.BOOLEAN:
-                    value = user_input.lower() in ['true', '1', 'yes']
+                    value = user_input.lower() in ['true', '1', 'yes', 't', 'y']
                 elif symbol.symbol_type == SymbolType.STRING:
                     value = str(user_input)
                 else:

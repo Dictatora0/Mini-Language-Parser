@@ -1,0 +1,5 @@
+// 赋值语句错误测试 - 缺少赋值运算符
+program test_assignment_error;
+begin
+    x = 10
+end.

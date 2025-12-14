@@ -1,0 +1,9 @@
+// 块结构测试
+program test_block;
+begin
+    begin
+        x := 5;
+        y := 10;
+        z := x + y
+    end
+end.

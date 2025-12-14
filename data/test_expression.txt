@@ -1,0 +1,8 @@
+// 表达式测试
+program test_expression;
+begin
+    result := 2 + 3 * 4 - 5 / 2;
+    x := (a + b) * (c - d);
+    y := -5;
+    z := -(a + b)
+end.

@@ -1,0 +1,6 @@
+// 块结构错误测试 - begin-end 不匹配
+program test_block_error;
+begin
+    begin
+        x := 1
+end.

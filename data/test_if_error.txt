@@ -1,0 +1,6 @@
+// if-then 错误测试 - 缺少 then
+program test_if_error;
+begin
+    if x
+        y := 1
+end.

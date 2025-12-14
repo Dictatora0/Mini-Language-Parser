@@ -1,0 +1,6 @@
+// if-then 结构测试
+program test_if;
+begin
+    if x >= 0 then
+        x := x - 1
+end.

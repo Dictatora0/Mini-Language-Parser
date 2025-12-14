@@ -81,7 +81,6 @@ class SemanticAnalyzer(ASTVisitor):
         # 获取变量声明的类型
         symbol = self.symbol_table.lookup(node.variable)
         if not symbol:
-            # 这个错误应该在 parser 中已经捕获了
             self.add_error(f"变量 '{node.variable}' 未声明", node)
             return
         
@@ -100,6 +99,9 @@ class SemanticAnalyzer(ASTVisitor):
                 f"类型不匹配: 不能将 {expr_type.name} 类型赋值给 {var_type.name} 类型的变量 '{node.variable}'",
                 node
             )
+        
+        # 标记变量已初始化
+        symbol.initialized = True
     
     def visit_IfStatement(self, node: IfStatement):
         """
@@ -177,6 +179,9 @@ class SemanticAnalyzer(ASTVisitor):
         elif isinstance(expr, Variable):
             symbol = self.symbol_table.lookup(expr.name)
             if symbol:
+                # 可选：警告使用未初始化的变量（不作为错误，因为有默认值）
+                # if not symbol.initialized:
+                #     self.add_error(f"警告: 变量 '{expr.name}' 可能未初始化", expr)
                 return symbol.symbol_type
             else:
                 self.add_error(f"变量 '{expr.name}' 未声明", expr)
@@ -219,6 +224,14 @@ class SemanticAnalyzer(ASTVisitor):
                     node
                 )
                 return None
+            
+            # 检查除零（仅对常量）
+            if op == TokenType.DIVIDE and isinstance(node.right, Number):
+                if node.right.value == 0 or node.right.value == 0.0:
+                    self.add_error(
+                        f"除零错误: 不能除以常量 0",
+                        node
+                    )
             
             # 使用辅助函数计算结果类型
             # 注意：binary_op_result_type 需要运算符字符串，而不是 TokenType 名称

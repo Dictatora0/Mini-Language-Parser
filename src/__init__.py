@@ -14,13 +14,13 @@ from .ast_nodes import (
     WriteStatement, ReadStatement,
     BinaryOp, UnaryOp, Number, String, Boolean, Variable,
     VarDeclarations, VarDecl,
-    ASTPrinter, print_ast
+    ASTPrinter, print_ast, ast_to_dict
 )
 from .symbol_table import SymbolTable, Symbol, SymbolType, ScopedSymbolTable
 from .semantic_analyzer import SemanticAnalyzer, analyze_semantics, SemanticError
 from .interpreter import Interpreter, run_program
 
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 __author__ = "Compiler Principles Course"
 __description__ = "Mini Language Parser - Enhanced with AST generation, symbol table, and interpreter"
 
@@ -32,12 +32,15 @@ __all__ = [
     'parse_to_ast', 'parse_and_print_ast',
     # AST Nodes
     'ASTNode', 'Program', 'Block', 'Statement', 'Expression',
-    'Assignment', 'IfStatement', 'WhileStatement',
+    'Assignment', 'IfStatement', 'WhileStatement', 'EmptyStatement',
+    'WriteStatement', 'ReadStatement',
     'BinaryOp', 'UnaryOp', 'Number', 'String', 'Boolean', 'Variable',
     'VarDeclarations', 'VarDecl',
-    'ASTPrinter', 'print_ast',
+    'ASTPrinter', 'print_ast', 'ast_to_dict',
     # Symbol Table
     'SymbolTable', 'Symbol', 'SymbolType', 'ScopedSymbolTable',
+    # Semantic Analyzer
+    'SemanticAnalyzer', 'analyze_semantics', 'SemanticError',
     # Interpreter
     'Interpreter', 'run_program',
 ]

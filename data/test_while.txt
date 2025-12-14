@@ -1,0 +1,11 @@
+// while 循环测试
+program test_while;
+begin
+    sum := 0;
+    i := 1;
+    while i <= 5 do
+    begin
+        sum := sum + i;
+        i := i + 1
+    end
+end.

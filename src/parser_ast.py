@@ -303,8 +303,8 @@ class ASTParser:
             return EmptyStatement()
         else:
             if not self.check(TokenType.END, TokenType.EOF):
-                self.error(f"无效的语句开始: {self.current_token.value}")
-                self.synchronize({TokenType.SEMICOLON, TokenType.END})
+                self.error(f"无效的语句开始: '{self.current_token.value}'")
+                self.synchronize({TokenType.SEMICOLON, TokenType.END, TokenType.ELSE})
             return EmptyStatement()
     
     def assignment_stmt(self) -> Optional[Assignment]:
@@ -509,23 +509,61 @@ class ASTParser:
         """
         <comparison> ::= <expression> <relop> <expression>
                        | "(" <condition> ")"
-        """
-        # 处理括号中的条件
-        if self.match(TokenType.LPAREN):
-            expr = self.condition()
-            if not expr:
-                self.error("括号内条件表达式错误")
-                return None
-            if not self.expect(TokenType.RPAREN, "条件表达式缺少右括号 ')'"):
-                return None
-            return expr
         
-        # 处理关系表达式
+        The grammar allows both:
+        1. Arithmetic expressions with relational operators: (a + b) >= (c - d)
+        2. Parenthesized conditions: ((a > b) and (c < d))
+        
+        Strategy: Use lookahead to distinguish between:
+        - (expr) relop (expr) - parenthesized arithmetic in comparison
+        - (condition) - parenthesized logical condition
+        
+        We check if after parsing an expression and closing paren, there's a relop.
+        If yes, it's case 1. If no, we need to reparse as condition.
+        """
+        # Special handling for parenthesized conditions
+        # We need to distinguish (x > 0) from (x + y)
+        if self.check(TokenType.LPAREN):
+            # Save position for potential backtracking
+            saved_pos = self.pos
+            saved_token = self.current_token
+            saved_errors_count = len(self.errors)
+            saved_success = self.success
+            
+            # Try to parse as parenthesized condition first
+            self.advance()  # consume '('
+            cond = self.condition()
+            
+            if cond and self.check(TokenType.RPAREN):
+                self.advance()  # consume ')'
+                # Check if there's a relop after the closing paren
+                # If yes, this was actually an expression, not a condition
+                if self.check(TokenType.LT, TokenType.LE, TokenType.GT, 
+                             TokenType.GE, TokenType.EQ, TokenType.NE):
+                    # Backtrack - this is actually (expr) relop (expr)
+                    self.pos = saved_pos
+                    self.current_token = saved_token
+                    # Remove any errors added during the failed parse
+                    self.errors = self.errors[:saved_errors_count]
+                    self.success = saved_success
+                    # Fall through to parse as expression
+                else:
+                    # This is a valid parenthesized condition
+                    return cond
+            else:
+                # Failed to parse as condition, backtrack
+                self.pos = saved_pos
+                self.current_token = saved_token
+                self.errors = self.errors[:saved_errors_count]
+                self.success = saved_success
+                # Fall through to parse as expression
+        
+        # Parse as: <expression> <relop> <expression>
         left = self.expression()
         if not left:
             return None
         
-        # 关系运算符
+        # Check for relational operator
         if self.check(TokenType.LT, TokenType.LE, TokenType.GT, 
                      TokenType.GE, TokenType.EQ, TokenType.NE):
             op_token = self.current_token
@@ -536,6 +574,7 @@ class ASTParser:
                 return None
             return BinaryOp(left=left, op=op_token, right=right)
         else:
+            # No relational operator found
             self.error("条件表达式缺少关系运算符")
             return None
     
